@@ -10,7 +10,7 @@ const GOOGLE_SHEET_CSV_URL = 'https://docs.google.com/spreadsheets/d/e/2PACX-1vS
 // 2) WRITE (SheetDB API Base URL)
 // Example format:
 // https://sheetdb.io/api/v1/abc123xyz
-const SHEETDB_API_BASE_URL = 'https://sheetdb.io/api/v1/3fdax10gaap3w';
+const SHEETDB_API_BASE_URL = 'https://sheetdb.io/api/v1/k26l5mm694tum';
 
 // Column name used to uniquely identify rows for updates.
 // Must match your sheet header exactly.
