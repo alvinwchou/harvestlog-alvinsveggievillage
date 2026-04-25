@@ -1,203 +1,416 @@
-/* BASE STYLES - Apply to all screen sizes */
-body {
-  font-family: sans-serif;
-  margin: 1em; /* Keep some margin */
-  /* background: #f8f8f8; */
-  background: #E0F7E0;
-  /* Use a fluid font size base or set a min-width for very small screens if desired */
-  font-size: 14px; /* A good base for readability */
-}
+// --------------------
+// CONFIGURATION (REQUIRED)
+// --------------------
 
-h1 {
-  text-align: center;
-  margin-bottom: 1em;
-  font-size: 2em; /* Ensure headings are readable */
-}
+// 1) READ (Published Google Sheet -> CSV URL)
+// Example format:
+// https://docs.google.com/spreadsheets/d/e/XXXXXXXXXXXX/pub?gid=0&single=true&output=csv
+const GOOGLE_SHEET_CSV_URL =
+  "https://docs.google.com/spreadsheets/d/e/2PACX-1vSeBqitWU8pjtoNVjGI4F8F31x1MB6Y_Yp7imFgeRR3JNJDjw_rDXaaFHoJ05SVQ9_eRdIF92eTxd-T/pub?output=csv";
 
-#date-selector {
-  display: block;
-  margin: 0 auto 1em auto;
-  padding: 0.5em;
-  font-size: 1em;
-  text-align: center;
-  width: calc(100% - 2em); /* Make it fluid, accounting for padding */
-  max-width: 300px; /* Prevent it from getting too wide on large screens */
-  box-sizing: border-box; /* Include padding in width calculation */
-}
+// 2) WRITE (SheetDB API Base URL)
+// Example format:
+// https://sheetdb.io/api/v1/abc123xyz
+const SHEETDB_API_BASE_URL = "https://sheetdb.io/api/v1/t2ll0uj7ocft4";
 
-#task-list>p {
-  text-align: center;
-  /* color: red; */
-}
+// Column name used to uniquely identify rows for updates.
+// Must match your sheet header exactly.
+const UID_COLUMN_NAME = "UID";
 
-.task-card {
-  background: #fff;
-  border: 1px solid #ccc;
-  padding: 1em;
-  border-radius: 16px;
-  margin-bottom: 1em;
-  /* Ensure content wraps */
-  word-wrap: break-word;
-  overflow-wrap: break-word;
-  cursor: pointer;
-  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
-}
+// --------------------
+// STATE
+// --------------------
+let currentRow = null;
+let allTasks = [];
+let taskMap = {}; // keyed by _row (CSV row index), not UID
+let currentLang = "en";
 
-.task-card h3 {
-  margin-top: 0;
-  margin-bottom: 8px;
-  font-size: 1.5em;
-}
-
-.task-card p {
-  margin: 4px 0;
-  color: #555;
-}
-
-/* Ensure buttons are large enough to tap */
-.task-card button {
-  width: 100%; /* Make button full width within card */
-  padding: 0.8em 1em; /* Increase tap target size */
-  font-size: 1em; /* Readable font size */
-  box-sizing: border-box;
-}
-
-.task-card.done {
-  opacity: 0.6;
-  border-left: 5px solid green;
-}
-
-.detail-container {
-  position: fixed;
-  top: 0;
-  right: 0;
-    background-color: rgba(255, 255, 255, 0.2); /* semi-transparent */
-    backdrop-filter: blur(2px);
-
-}
-
-.detail-form {
-  position: fixed;
-  top: 10%;
-  left: 5%;
-  right: 5%;
-  background: #fff;
-  border: 2px solid #333;
-  border-radius: 10px;
-  padding: 1em;
-  padding-top: 0;
-  /* padding-top: calc(2em + 10%); */
-  z-index: 1000;
-  max-height: 80%;
-  overflow-y: auto;
-  /* Ensure it takes up most of the screen on small devices */
-  width: 90%; /* Adjust width to fit screen with margins */
-  margin: 0 auto; /* Center it */
-  box-sizing: border-box; /* Include padding in width calculation */
-}
-
-.detail-form-header {
-  position: sticky; 
-  top: 0;
-  display: flex;
-  justify-content: space-between;
-  background-color: #fff;
-  border-bottom: 1px solid #2c7;
-}
-
-.detail-form-close-button {
-  margin-right: 0em; 
-  padding: 0.5em 0.8em;
-  border-radius: 24px;
-}
-
-label {
-  margin-top: 0.8em; /* More space above labels for touch */
-  display: block;
-  font-weight: bold; /* Make labels stand out */
-  font-size: 1em;
-}
-
-input, textarea, select { /* Added select here for consistency */
-  width: 100%;
-  padding: 0.6em; /* More padding for easier tapping/typing */
-  margin-bottom: 1em; /* More space below inputs */
-  box-sizing: border-box; /* Include padding and border in width calculation */
-  font-size: 1em; /* Readable font size */
-}
-
-button {
-  padding: 0.8em 1.5em; /* Larger tap target */
-  margin-top: 0.8em;
-  margin-right: 0.8em; /* Slightly more margin between buttons */
-  font-weight: bold;
-  border: none;
-  background: #2c7;
-  color: #fff;
-  border-radius: 10px;
-  font-size: 1em; /* Readable font size */
-  cursor: pointer; /* Indicate it's clickable */
-}
-
-
-
-/* Ensure buttons line up better on small screens */
-.detail-form button[type="button"] {
-  display: block; /* Stack buttons vertically */
-  width: calc(100% - 1em); /* Full width minus margin */
-  margin-right: 0;
-  margin-bottom: 0.5em; /* Space between stacked buttons */
-}
-
-
-.sales-breakdown {
-  background: #f1f1f1;
-  padding: 0.8em; /* More padding */
-  border-radius: 5px;
-  margin-top: 1em;
-  margin-bottom: 1em;
-  font-size: 0.95em;
-  /* Use flexbox for horizontal layout on larger screens, and stack on smaller */
-  display: flex;
-  flex-wrap: wrap; /* Allow items to wrap to next line */
-  justify-content: space-around; /* Distribute space evenly */
-}
-
-.sales-breakdown span {
-  display: block; /* Keep them stacked by default */
-  margin-bottom: 0.5em; /* Space between breakdown items */
-  flex: 1 1 45%; /* Allow items to take up about 45% of space, two per row */
-  text-align: center;
-}
-
-.lang-toggle button {
-  background: #fff;
-  color: #2c7;
-  /* border-color: #2fbf71; */
-}
-
-.lang-toggle button.active {
-  background: #2c7;
-  color: #fff;
-  /* border-color: #2fbf71; */
-  cursor: default;
-}
-
-/* MEDIA QUERIES for larger screens (optional, but good practice) */
-/* Adjust sales-breakdown to be inline on larger screens */
-@media (min-width: 600px) {
-  .sales-breakdown span {
-    display: inline-block;
-    margin-right: 1em; /* Space out items horizontally */
-    margin-bottom: 0;
-    text-align: left;
-  }
-  .sales-breakdown {
-    justify-content: flex-start; /* Align to start on larger screens */
-  }
-  .detail-form button[type="button"] {
-      display: inline-block; /* Buttons side-by-side on larger screens */
-      width: auto;
-      margin-right: 0.8em;
+// --------------------
+// UTILITY FUNCTIONS
+// --------------------
+function normalizeDate(d) {
+  if (!d) return "";
+  try {
+    return d
+      .trim()
+      .replace(/["']/g, "")
+      .replace(/\r/g, "")
+      .replace(
+        /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/,
+        (_, m, day, y) =>
+          `${y}-${String(m).padStart(2, "0")}-${String(day).padStart(2, "0")}`
+      );
+  } catch (error) {
+    console.error("Error normalizing date:", d, error);
+    return "";
   }
 }
+
+// Convert an object of updates into query params for SheetDB PATCH.
+// SheetDB supports PATCH /api/v1/{API_ID}/{COLUMN}/{VALUE}?name=Emma&age=28 ...
+function toQueryString(obj) {
+  const params = new URLSearchParams();
+  Object.entries(obj).forEach(([k, v]) => {
+    // Skip undefined/null/empty-string updates
+    if (v === undefined || v === null) return;
+    const valueStr = String(v).trim();
+    if (valueStr === "") return;
+    params.append(k, valueStr);
+  });
+  return params.toString();
+}
+
+// --------------------
+// RENDER: SUMMARY VIEW
+// --------------------
+function renderTasks(tasksToRender) {
+  const container = document.getElementById("task-list");
+  container.innerHTML = "";
+
+  if (!tasksToRender || tasksToRender.length === 0) {
+    container.innerHTML =
+      "<p>No tasks to display for this date. / No hay tareas para esta fecha.</p>";
+    return;
+  }
+
+  container.innerHTML = `<p data-en="${tasksToRender.length} task(s) scheduled for today." data-es="${tasksToRender.length} tarea(s) programada(s) para hoy.">${tasksToRender.length} task(s) scheduled for today.</p>`;
+
+  tasksToRender.forEach((task) => {
+    const div = document.createElement("div");
+    div.className = "task-card";
+
+    div.innerHTML = `
+    <h3>${task["Crop"] || "N/A"}</h3>
+    <p><strong data-en="📍 Location:" data-es="📍 Ubicación:">📍 Location:</strong> ${
+      task["Location"] || "-"
+    }</p>
+    <p><strong data-en="📦 Quantity:" data-es="📦 Cantidad:">📦 Quantity:</strong> ${
+      task["Units to Harvest"] || "N/A"
+    } ${task["Harvest Units"] || ""}</p>
+    <p><strong data-en="👤 Assigned to:" data-es="👤 Asignado a:">👤 Assigned to:</strong> <span data-en="Unassigned" data-es="Sin asignar">${
+      task["Assignee(s)"] || "Unassigned"
+    }</span></p>
+  `;
+
+    div.addEventListener("click", () => {
+      openForm(task._row || 0);
+    });
+
+    container.appendChild(div);
+  });
+}
+
+// --------------------
+// RENDER: DETAIL VIEW
+// --------------------
+function openForm(rowId) {
+  const task = taskMap[rowId];
+  if (!task) {
+    console.error("Task not found for rowId:", rowId);
+    alert("Could not open task (row not found).");
+    return;
+  }
+
+  currentRow = task;
+
+  document.getElementById("detail-title").innerText = task["Crop"] || "N/A";
+  document.getElementById("detail-location").innerText =
+    task["Location"] || "-";
+  document.getElementById("detail-quantity").innerText = `${
+    task["Units to Harvest"] || "N/A"
+  } ${task["Harvest Units"] || ""}`;
+
+  const breakdown = document.getElementById("sales-breakdown");
+  breakdown.innerHTML = `
+    <strong>Sales Breakdown / Desglose de Ventas: </strong>
+    <span>CSA / CSA: ${task["CSA"] || 0}</span>
+    <span>Parkdale Bins / Contenedores Parkdale: ${
+      task["Parkdale Bins"] || 0
+    }</span>
+    <span>Cobourg Farmers Market / Mercado de Agricultores de Cobourg: ${
+      task["Cobourg Farmers Market"] || 0
+    }</span>
+    <span>Kitchen / Cocina: ${task["Kitchen"] || 0}</span>
+    <span>Online / En línea: ${task["Online"] || 0}</span>
+  `;
+
+  document.getElementById("assignee").value = task["Assignee(s)"] || "";
+  document.getElementById("harvestTime").value =
+    task["Time to Harvest (min)"] || "";
+  document.getElementById("weight").value = task["Harvest Weight (kg)"] || "";
+  document.getElementById("washPackTime").value =
+    task["Time to Wash & Pack (mins)"] || "";
+  document.getElementById("notes").value = task["Field Crew Notes"] || "";
+
+  document.getElementById("detail-container").style.display = "block";
+  document.getElementById("detail-form-top").scrollIntoView();
+}
+
+function closeForm() {
+  document.getElementById("detail-container").style.display = "none";
+}
+
+const detailContainer = document.getElementById("detail-container");
+detailContainer.addEventListener("click", (e) => {
+  if (e.target !== detailContainer) return;
+
+  closeForm();
+});
+
+// --------------------
+// DATA FETCH & PARSE (READ FROM CSV)
+// --------------------
+function fetchAndParseCsv() {
+  return fetch(GOOGLE_SHEET_CSV_URL)
+    .then((res) => {
+      if (!res.ok)
+        throw new Error(`HTTP ${res.status} while fetching Google CSV`);
+      return res.text();
+    })
+    .then((csv) => {
+      if (!csv || csv.trim() === "")
+        throw new Error("Fetched CSV data is empty.");
+
+      const rows = csv
+        .trim()
+        .split("\n")
+        .map((row) => {
+          const cells = [];
+          let inQuotes = false,
+            value = "";
+
+          for (let i = 0; i < row.length; i++) {
+            const char = row[i];
+            const nextChar = row[i + 1];
+
+            if (char === '"' && inQuotes && nextChar === '"') {
+              value += '"';
+              i++;
+            } else if (char === '"') {
+              inQuotes = !inQuotes;
+            } else if (char === "," && !inQuotes) {
+              cells.push(value);
+              value = "";
+            } else {
+              value += char;
+            }
+          }
+          cells.push(value);
+          return cells.map((c) => c.trim());
+        });
+
+      const headers = rows.shift();
+      if (!headers || headers.length === 0)
+        throw new Error("CSV headers are missing or empty.");
+
+      const parsedTasks = rows.map((row, i) => {
+        const obj = {};
+        headers.forEach((h, j) => {
+          const key = h.trim();
+          let value = row[j] ? row[j].trim().replace(/^"|"$/g, "") : "";
+
+          if (key === "Harvest Date") value = normalizeDate(value);
+          obj[key] = value;
+        });
+
+        // CSV row numbers: header row is row 1 in sheet, first data row is row 2.
+        obj._row = i + 2;
+        return obj;
+      });
+
+      // Filter: only show tasks that are harvestable and not completed
+      allTasks = parsedTasks.filter(
+        (row) =>
+          row["Crop"] &&
+          row["Harvest Date"] &&
+          row["Harvest Date"] !== "" &&
+          row["Status"] !== "Completed" &&
+          !isNaN(parseFloat(row["Units to Harvest"])) &&
+          parseFloat(row["Units to Harvest"]) > 0
+      );
+
+      taskMap = {};
+      allTasks.forEach((t) => {
+        taskMap[t._row] = t;
+      });
+
+      document.dispatchEvent(new Event("tasksLoaded"));
+    })
+    .catch((error) => {
+      console.error("Error fetching/parsing CSV:", error);
+      const container = document.getElementById("task-list");
+      if (container) {
+        container.innerHTML = `<p style="color:red;">Error loading tasks: ${error.message}</p>`;
+      }
+      allTasks = [];
+      taskMap = {};
+      document.dispatchEvent(new Event("tasksLoaded"));
+    });
+}
+
+// --------------------
+// WRITE BACK (UPDATE VIA SHEETDB)
+// --------------------
+function patchRowByUid(uid, updatesObj) {
+  const url = `${SHEETDB_API_BASE_URL}/${encodeURIComponent(
+    UID_COLUMN_NAME
+  )}/${encodeURIComponent(uid)}`;
+
+  return fetch(url, {
+    method: "PATCH",
+    headers: {
+      "Content-Type": "application/json",
+    },
+    body: JSON.stringify({
+      data: updatesObj,
+    }),
+  }).then((res) => {
+    if (!res.ok) throw new Error(`SheetDB update failed (HTTP ${res.status})`);
+    return res.json();
+  });
+}
+
+// --------------------
+// DOM READY BINDINGS
+// --------------------
+document.addEventListener("DOMContentLoaded", () => {
+  const dateInput = document.getElementById("date-selector");
+
+  if (!dateInput) {
+    alert("Error: date selector not found.");
+    return;
+  }
+
+  // Set date selector to today
+  const today = new Date().toISOString().split("T")[0];
+  dateInput.value = today;
+
+  // Load tasks
+  fetchAndParseCsv();
+
+  document.addEventListener("tasksLoaded", () => {
+    const selectedDate = dateInput.value;
+    const tasksToFilter = Array.isArray(allTasks) ? allTasks : [];
+
+    const filteredTasks = tasksToFilter.filter(
+      (row) => normalizeDate(row["Harvest Date"]) === selectedDate
+    );
+
+    renderTasks(filteredTasks);
+  });
+
+  dateInput.addEventListener("change", () => {
+    const selectedDate = dateInput.value;
+    const tasksToFilter = Array.isArray(allTasks) ? allTasks : [];
+    const filteredTasks = tasksToFilter.filter(
+      (row) => normalizeDate(row["Harvest Date"]) === selectedDate
+    );
+    console.log(filteredTasks);
+    renderTasks(filteredTasks);
+  });
+
+  const updateBtn = document.getElementById("update-btn");
+  const completeBtn = document.getElementById("complete-btn");
+
+  if (updateBtn) {
+    updateBtn.addEventListener("click", () => handleSubmit(false));
+  }
+
+  if (completeBtn) {
+    completeBtn.addEventListener("click", () => handleSubmit(true));
+  }
+
+  function handleSubmit(requireAllFields) {
+    if (!currentRow) {
+      alert("Error: No task selected.");
+      return;
+    }
+
+    const uid = (currentRow[UID_COLUMN_NAME] || "").toString().trim();
+    if (!uid) {
+      alert(
+        `Error: This row is missing a ${UID_COLUMN_NAME} value. Add a unique UID in the sheet and reload.`
+      );
+      return;
+    }
+
+    const harvestTime = document.getElementById("harvestTime").value.trim();
+    const weight = document.getElementById("weight").value.trim();
+    const washPackTime = document.getElementById("washPackTime").value.trim();
+    const assignee = document.getElementById("assignee").value.trim();
+    const notes = document.getElementById("notes").value.trim();
+
+    if (
+      requireAllFields &&
+      (!assignee || !harvestTime || !weight || !washPackTime)
+    ) {
+      alert("Please complete all fields before marking as completed.");
+      return;
+    }
+
+    // Build updates (keys must match sheet headers exactly)
+    const updates = {};
+    if (assignee) updates["Assignee(s)"] = assignee;
+    if (harvestTime) updates["Time to Harvest (min)"] = harvestTime;
+    if (weight) updates["Harvest Weight (kg)"] = weight;
+    if (washPackTime) updates["Time to Wash & Pack (mins)"] = washPackTime;
+    if (notes) updates["Field Crew Notes"] = notes;
+
+    if (requireAllFields) {
+      updates["Status"] = "Completed";
+      updates["Harvest Date"] = new Date().toISOString().split("T")[0];
+    } else if (assignee) {
+      // Optional: mark Assigned if partially updated
+      updates["Status"] = "Assigned";
+    }
+
+    patchRowByUid(uid, updates)
+      .then(() => {
+        // Update local copy so the UI reflects changes immediately
+        Object.assign(currentRow, updates);
+        taskMap[currentRow._row] = currentRow;
+
+        // If completed, remove from allTasks and close form
+        if (updates["Status"] === "Completed") {
+          allTasks = allTasks.filter((t) => t._row !== currentRow._row);
+          closeForm();
+          document.dispatchEvent(new Event("tasksLoaded"));
+          alert("Task marked Completed!");
+          return;
+        }
+
+        closeForm();
+        alert("Task updated!");
+        // openForm(currentRow._row);
+        document.dispatchEvent(new Event("tasksLoaded"));
+      })
+      .catch((err) => {
+        console.error("Update failed:", err);
+        alert(
+          `Error updating task: ${err.message}\n\nMost common causes:\n- Wrong SheetDB API URL\n- SheetDB update permissions disabled\n- Wrong Chrome profile / authorization`
+        );
+      });
+  }
+
+  const enButton = document.getElementById("en-button");
+  const esButton = document.getElementById("es-button");
+
+  enButton.onclick = () => setLang("en");
+  esButton.onclick = () => setLang("es");
+
+  function setLang(lang) {
+    currentLang = lang;
+    console.log("click");
+    enButton.classList.toggle("active", lang === "en");
+    esButton.classList.toggle("active", lang === "es");
+
+    document.querySelectorAll("[data-en]").forEach((e) => {
+      e.textContent = lang === "en" ? e.dataset.en : e.dataset.es;
+    });
+
+    document.querySelectorAll("[data-en-placeholder]").forEach((e) => {
+      e.placeholder =
+        lang === "en" ? e.dataset.enPlaceholder : e.dataset.esPlaceholder;
+    });
+  }
+});
