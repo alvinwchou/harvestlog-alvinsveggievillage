@@ -3,7 +3,7 @@ body {
   font-family: sans-serif;
   margin: 1em; /* Keep some margin */
   /* background: #f8f8f8; */
-  background: #E0F7E0;
+  background: #e0f7e0;
   /* Use a fluid font size base or set a min-width for very small screens if desired */
   font-size: 14px; /* A good base for readability */
 }
@@ -25,7 +25,7 @@ h1 {
   box-sizing: border-box; /* Include padding in width calculation */
 }
 
-#task-list>p {
+#task-list > p {
   text-align: center;
   /* color: red; */
 }
@@ -71,9 +71,8 @@ h1 {
   position: fixed;
   top: 0;
   right: 0;
-    background-color: rgba(255, 255, 255, 0.2); /* semi-transparent */
-    backdrop-filter: blur(2px);
-
+  background-color: rgba(255, 255, 255, 0.2); /* semi-transparent */
+  backdrop-filter: blur(2px);
 }
 
 .detail-form {
@@ -97,7 +96,7 @@ h1 {
 }
 
 .detail-form-header {
-  position: sticky; 
+  position: sticky;
   top: 0;
   display: flex;
   justify-content: space-between;
@@ -106,7 +105,7 @@ h1 {
 }
 
 .detail-form-close-button {
-  margin-right: 0em; 
+  margin-right: 0em;
   padding: 0.5em 0.8em;
   border-radius: 24px;
 }
@@ -118,7 +117,10 @@ label {
   font-size: 1em;
 }
 
-input, textarea, select { /* Added select here for consistency */
+input,
+textarea,
+select {
+  /* Added select here for consistency */
   width: 100%;
   padding: 0.6em; /* More padding for easier tapping/typing */
   margin-bottom: 1em; /* More space below inputs */
@@ -139,8 +141,6 @@ button {
   cursor: pointer; /* Indicate it's clickable */
 }
 
-
-
 /* Ensure buttons line up better on small screens */
 .detail-form button[type="button"] {
   display: block; /* Stack buttons vertically */
@@ -148,7 +148,6 @@ button {
   margin-right: 0;
   margin-bottom: 0.5em; /* Space between stacked buttons */
 }
-
 
 .sales-breakdown {
   background: #f1f1f1;
@@ -196,8 +195,8 @@ button {
     justify-content: flex-start; /* Align to start on larger screens */
   }
   .detail-form button[type="button"] {
-      display: inline-block; /* Buttons side-by-side on larger screens */
-      width: auto;
-      margin-right: 0.8em;
+    display: inline-block; /* Buttons side-by-side on larger screens */
+    width: auto;
+    margin-right: 0.8em;
   }
 }
