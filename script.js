@@ -24,6 +24,7 @@ let currentRow = null;
 let allTasks = [];
 let taskMap = {}; // keyed by _row (CSV row index), not UID
 let currentLang = "en";
+// let assignees = [];
 
 // --------------------
 // UTILITY FUNCTIONS
@@ -170,7 +171,7 @@ function fetchAndParseCsv() {
     .then((csv) => {
       if (!csv || csv.trim() === "")
         throw new Error("Fetched CSV data is empty.");
-
+      console.log(csv);
       const rows = csv
         .trim()
         .split("\n")
@@ -248,6 +249,39 @@ function fetchAndParseCsv() {
     });
 }
 
+function fetchAndParseName() {
+  return fetch(SHEETDB_API_BASE_URL + "?sheet=Assignees/Asignado")
+    .then((res) => {
+      if (!res.ok)
+        throw new Error(`HTTP ${res.status} while fetching Google CSV`);
+      return res.text();
+    })
+    .then((csv) => {
+      if (!csv || csv.trim() === "")
+        throw new Error("Fetched CSV data is empty.");
+      const data = JSON.parse(csv);
+      rows = data.map((row) => row.Assignees);
+
+      // assignees = rows
+
+      const assignees = document.getElementById("assignee");
+
+      rows.forEach((name) => {
+        const assignee = document.createElement("option");
+        assignee.textContent = name;
+        assignees.appendChild(assignee);
+      });
+    })
+    .catch((error) => {
+      console.error("Error fetching/parsing CSV:", error);
+      const assignees = document.getElementById("assignee");
+      const assignee = document.createElement("option");
+      assignee.textContent = "Error loading assignees";
+      assignee.disabled = true;
+      assignees.appendChild(assignee);
+    });
+}
+
 // --------------------
 // WRITE BACK (UPDATE VIA SHEETDB)
 // --------------------
@@ -287,6 +321,13 @@ document.addEventListener("DOMContentLoaded", () => {
 
   // Load tasks
   fetchAndParseCsv();
+  fetchAndParseName();
+
+  // Reload task every 5 mins for updates
+  setInterval(() => {
+    fetchAndParseCsv();
+    document.dispatchEvent(new Event("tasksLoaded"));
+  }, 300000);
 
   document.addEventListener("tasksLoaded", () => {
     const selectedDate = dateInput.value;
@@ -305,7 +346,7 @@ document.addEventListener("DOMContentLoaded", () => {
     const filteredTasks = tasksToFilter.filter(
       (row) => normalizeDate(row["Harvest Date"]) === selectedDate
     );
-    console.log(filteredTasks);
+
     renderTasks(filteredTasks);
   });
 
@@ -337,9 +378,15 @@ document.addEventListener("DOMContentLoaded", () => {
     const harvestTime = document.getElementById("harvestTime").value.trim();
     const weight = document.getElementById("weight").value.trim();
     const washPackTime = document.getElementById("washPackTime").value.trim();
-    const assignee = document.getElementById("assignee").value.trim();
+    const assignees = document.getElementById("assignee");
     const notes = document.getElementById("notes").value.trim();
 
+    const selectedAssignees = Array.from(assignees.options)
+      .filter((option) => option.selected)
+      .map((option) => option.value);
+
+    const assignee = selectedAssignees.join(", ")
+    
     if (
       requireAllFields &&
       (!assignee || !harvestTime || !weight || !washPackTime)
@@ -392,6 +439,7 @@ document.addEventListener("DOMContentLoaded", () => {
       });
   }
 
+  // Toggle EN/ES
   const enButton = document.getElementById("en-button");
   const esButton = document.getElementById("es-button");
 
@@ -400,7 +448,7 @@ document.addEventListener("DOMContentLoaded", () => {
 
   function setLang(lang) {
     currentLang = lang;
-    console.log("click");
+
     enButton.classList.toggle("active", lang === "en");
     esButton.classList.toggle("active", lang === "es");
 
